@@ -44,20 +44,33 @@ CLOUD_DRAFT_ONLY_ACTIONS: Set[str] = {
     "register_payment",
 }
 
-# Actions allowed on Cloud (read/draft operations)
+# Actions allowed on Cloud (read/draft operations).
+# Names here MUST match the actual MCP @app.route endpoint names so the
+# brain's tool_executor (which splits service__action and checks `action`)
+# resolves correctly.
 CLOUD_ALLOWED_ACTIONS: Set[str] = {
-    # Email
-    "draft",
-    "check_draft",
+    # Email — draft flow allowed; send_email and execute_approved_draft are blocked.
+    "draft",                  # legacy alias (kept for backward compat)
+    "send_draft",             # email_mcp /send_draft
+    "check_draft",            # legacy alias
+    "check_draft_status",     # email/linkedin/facebook/twitter /check_draft_status
     "capabilities",
-    # Social
+    "read_file",              # filesystem reads
+    "write_file",             # filesystem writes (used for draft artifacts in vault)
+    "list_files",
+    # Social — draft flow allowed; create_post / create_tweet / create_instagram_post blocked.
     "create_draft",
-    "check_draft",
     "get_engagement_summary",
     "get_auth_url",
     "exchange_token",
     "refresh_token",
-    # Odoo read operations
+    "get_messages",           # linkedin read
+    # Approval — cloud may request approval and poll its status, but cannot itself approve/reject.
+    "request_approval",
+    "check_approval",
+    "list_pending_approvals",
+    # WhatsApp — cloud cannot send (blocked); no cloud-allowed whatsapp actions.
+    # Odoo — all read operations + draft-state writes; confirm_invoice and register_payment blocked.
     "health",
     "get_invoice",
     "get_invoices",

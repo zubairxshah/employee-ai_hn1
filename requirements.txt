@@ -39,3 +39,6 @@ pypiwin32>=223 ; sys_platform == 'win32'
 
 # For potential Odoo integration
 odoorpc>=0.8.0
+
+# Gemini SDK for llm_brain/
+google-genai>=2.6.0
