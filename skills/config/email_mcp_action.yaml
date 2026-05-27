@@ -1,0 +1,21 @@
+# Email MCP Action Skill Configuration
+name: email_mcp_action
+version: "1.0.0"
+enabled: true
+
+config:
+  # MCP server URL
+  mcp_url: http://localhost:8001
+  
+  # Request timeout (seconds)
+  timeout: 30
+  
+  # Default email settings
+  default_html: false
+  
+  # Approval settings
+  require_approval_for_new_recipients: true
+  require_approval_for_amounts_over: 1000
+
+# Vault path
+vault_path: D:\prompteng\AI_Employee_Vault

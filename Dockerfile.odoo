@@ -1,0 +1,20 @@
+# Odoo 17 Dockerfile
+# Custom Odoo image with configuration for AI Employee project
+
+FROM odoo:17
+
+# Set environment variables
+ENV ODOO_DB=odoo
+ENV ODOO_DB_USER=odoo
+ENV ODOO_DB_PASSWORD=odoo
+ENV ODOO_ADMIN_PASSWORD=admin123
+
+# Expose Odoo port
+EXPOSE 8069
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=30s --start-period=40s --retries=3 \
+    CMD python3 -c "import urllib.request; urllib.request.urlopen('http://localhost:8069')" || exit 1
+
+# Default command
+CMD ["odoo", "--db-filter=^odoo$"]

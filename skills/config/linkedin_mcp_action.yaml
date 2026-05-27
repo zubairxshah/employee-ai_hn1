@@ -1,0 +1,20 @@
+# LinkedIn MCP Action Skill Configuration
+name: linkedin_mcp_action
+version: "1.0.0"
+enabled: true
+
+config:
+  # MCP server URL
+  mcp_url: http://localhost:8002
+
+  # Request timeout (seconds)
+  timeout: 30
+
+  # Default post settings
+  default_visibility: PUBLIC
+
+  # Approval settings
+  require_approval_for_all_posts: true
+
+# Vault path
+vault_path: D:\prompteng\AI_Employee_Vault

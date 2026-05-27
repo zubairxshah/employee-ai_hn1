@@ -1,0 +1,22 @@
+# File System Watcher Skill Configuration
+name: file_system_watcher
+version: "1.0.0"
+enabled: true
+
+config:
+  supported_extensions:
+    - .pdf
+    - .docx
+    - .txt
+    - .xlsx
+    - .jpg
+    - .png
+    - .jpeg
+  processed_files_log: processed_files.txt
+  scan_interval_seconds: 60
+
+# Drop folder to monitor
+drop_folder: D:\prompteng\AI_Employee_Drop
+
+# Vault path
+vault_path: D:\prompteng\AI_Employee_Vault

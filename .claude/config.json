@@ -1,0 +1,51 @@
+{
+  "version": "1.0",
+  "modelPreferences": {
+    "primaryModel": "claude-sonnet",
+    "fallbackModels": ["claude-opus", "claude-haiku"]
+  },
+  "tokenManagement": {
+    "maxTokensPerRequest": 4096,
+    "optimizeForCost": true
+  },
+  "integrationSettings": {
+    "obsidianPath": "D:\\prompteng\\AI_Employee_Vault",
+    "mcpServers": [
+      {
+        "name": "filesystem-mcp",
+        "url": "http://localhost:8000",
+        "enabled": true,
+        "description": "File system operations for vault access"
+      },
+      {
+        "name": "approval-mcp",
+        "url": "http://localhost:8003",
+        "enabled": true,
+        "description": "Human-in-the-loop approval system"
+      }
+    ],
+    "watcherIntervals": {
+      "gmailCheck": 30000,
+      "whatsappCheck": 30000,
+      "filesystemCheck": 10000
+    }
+  },
+  "ralphWiggumStopHook": {
+    "enabled": true,
+    "maxIterations": 10,
+    "taskCompletionThreshold": 0.95
+  },
+  "vaultIntegration": {
+    "vaultPath": "D:\\prompteng\\AI_Employee_Vault",
+    "dashboardFile": "Dashboard.md",
+    "companyHandbookFile": "Company_Handbook.md",
+    "directories": {
+      "inbox": "Inbox",
+      "needsAction": "Needs_Action",
+      "done": "Done",
+      "pendingApproval": "Pending_Approval",
+      "approved": "Approved",
+      "rejected": "Rejected"
+    }
+  }
+}

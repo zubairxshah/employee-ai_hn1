@@ -1,0 +1,41 @@
+# Dependencies for AI Personal Employee
+
+# File system monitoring
+watchdog>=4.0.0
+
+# HTTP requests for MCP integration
+requests>=2.31.0
+
+# Async support
+asyncio-mqtt>=0.14.0
+aiohttp>=3.9.0
+
+# Web framework for MCP servers
+flask>=2.3.0
+
+# Scheduling
+schedule>=1.2.0
+APScheduler>=3.10.0
+
+# Configuration management
+pyyaml>=6.0
+
+# Google API for Gmail
+google-auth>=2.23.0
+google-auth-oauthlib>=1.1.0
+google-auth-httplib2>=0.1.0
+google-api-python-client>=2.100.0
+
+# Browser automation for WhatsApp
+playwright>=1.38.0
+
+# WhatsApp notifications
+pywhatkit>=5.4
+
+# For potential database integration
+sqlalchemy>=2.0.0
+psycopg2-binary>=2.9.0 ; sys_platform != 'win32'
+pypiwin32>=223 ; sys_platform == 'win32'
+
+# For potential Odoo integration
+odoorpc>=0.8.0

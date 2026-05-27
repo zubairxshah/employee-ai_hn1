@@ -1,0 +1,8 @@
+# Filesystem MCP Action Skill Configuration
+name: filesystem_mcp_action
+version: "1.0.0"
+enabled: true
+
+config:
+  mcp_url: http://localhost:8000
+  timeout: 30

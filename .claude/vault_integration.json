@@ -1,0 +1,40 @@
+{
+  "vault_integration": {
+    "obsidian_vault_path": "D:\\prompteng\\AI_Employee_Vault",
+    "dashboard_file": "Dashboard.md",
+    "company_handbook_file": "Company_Handbook.md",
+    "inbox_directory": "Inbox",
+    "needs_action_directory": "Needs_Action",
+    "done_directory": "Done",
+    "file_monitoring": {
+      "enabled": true,
+      "polling_interval_seconds": 5,
+      "supported_file_types": [".md"]
+    },
+    "claude_integration": {
+      "ralph_wiggum_loop": {
+        "enabled": true,
+        "max_iterations": 10,
+        "completion_threshold": 0.95,
+        "stop_conditions": [
+          "task_completed",
+          "max_iterations_reached",
+          "human_intervention_required"
+        ]
+      },
+      "file_system_tools": {
+        "read_enabled": true,
+        "write_enabled": true,
+        "move_enabled": true,
+        "create_enabled": true
+      }
+    },
+    "security": {
+      "human_approval_required": {
+        "financial_transactions_over": 500,
+        "contract_agreements": true,
+        "sensitive_communications": true
+      }
+    }
+  }
+}

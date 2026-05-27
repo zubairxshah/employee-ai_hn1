@@ -1,0 +1,20 @@
+# Twitter (X) MCP Action Skill Configuration
+name: twitter_mcp_action
+version: "1.0.0"
+enabled: true
+
+config:
+  # MCP server URL
+  mcp_url: http://localhost:8007
+
+  # Request timeout (seconds)
+  timeout: 30
+
+  # Tweet settings
+  max_tweet_length: 280
+
+  # Approval settings
+  require_approval_for_all_tweets: true
+
+# Vault path
+vault_path: D:\prompteng\AI_Employee_Vault

@@ -1,0 +1,28 @@
+{
+  "processes": {
+    "orchestrator": {
+      "command": ["python", "orchestrator.py"],
+      "restart_on_failure": true,
+      "max_restarts_per_hour": 5
+    },
+    "scheduler": {
+      "command": ["python", "scheduler.py"],
+      "restart_on_failure": true,
+      "max_restarts_per_hour": 3
+    },
+    "filesystem_mcp": {
+      "command": ["python", "filesystem_mcp.py"],
+      "restart_on_failure": true,
+      "max_restarts_per_hour": 3,
+      "working_directory": "mcp_servers"
+    },
+    "approval_mcp": {
+      "command": ["python", "approval_mcp.py"],
+      "restart_on_failure": true,
+      "max_restarts_per_hour": 3,
+      "working_directory": "mcp_servers"
+    }
+  },
+  "check_interval": 60,
+  "alert_on_restart": true
+}

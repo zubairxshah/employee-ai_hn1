@@ -1,0 +1,60 @@
+# Environment and secrets
+.env
+deploy/cloud.env
+
+# Token files
+.gmail_token.json
+.linkedin_token.json
+.facebook_token.json
+.twitter_token.json
+*.token.json
+
+# OAuth client credentials
+gmail_credentials.json
+*_credentials.json
+
+# Business/client data (excluded from public repo)
+Bank_Transactions.md
+Business_Goals.md
+Client_A_Invoice_Task.md
+Company_Handbook.md
+EMAIL_invoice_client_a.md
+PLAN_invoice_client_a.md
+Rates.md
+Vault_Config.md
+WHATSAPP_client_a_*.md
+
+# WhatsApp session
+.whatsapp_session/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# Logs
+*.log
+watchdog.log
+
+# State files
+notification_state.json
+
+# OS files
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Debug/test files with hardcoded credentials
+test_direct_smtp.py
+debug_exchange.py
+debug_token_exchange.py
+get_member_id.py
+test_full_linkedin_flow.py
+test_linkedin_post.py
+test_linkedin_validator.py

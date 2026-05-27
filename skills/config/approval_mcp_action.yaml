@@ -1,0 +1,8 @@
+# Approval MCP Action Skill Configuration
+name: approval_mcp_action
+version: "1.0.0"
+enabled: true
+
+config:
+  mcp_url: http://localhost:8003
+  timeout: 30

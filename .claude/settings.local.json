@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(netstat -ano)",
+      "Bash(findstr \"8000 8001 8002 8003 8004 8005 8006 8007 8069 9000\")",
+      "Bash(docker --version)",
+      "PowerShell(docker compose up *)",
+      "PowerShell(docker start *)",
+      "PowerShell(python start_mcp_servers.py)",
+      "PowerShell(Get-NetTCPConnection *)",
+      "PowerShell($env:AGENT_ROLE='cloud'; python cloud_orchestrator.py)",
+      "PowerShell($env:AGENT_ROLE='local'; python local_orchestrator.py)",
+      "PowerShell(try { $r = Invoke-WebRequest -Uri \"http://localhost:8069/web/database/selector\" -UseBasicParsing -TimeoutSec 5; \"Odoo HTTP $\\($r.StatusCode\\) - reachable\" } catch { \"Odoo unreachable: $\\($_.Exception.Message\\)\" })",
+      "PowerShell(python cloud_health_monitor.py)",
+      "PowerShell(python -m unittest tests.test_platinum_agent_config tests.test_platinum_claim_manager tests.test_platinum_vault_sync tests.test_platinum_draft_mode tests.test_platinum_demo_flow -v 2>&1 | Select-Object -Last 120)",
+      "PowerShell(docker exec odoo-postgres *)",
+      "Bash(git add *)",
+      "Bash(grep -iE \"\\\\.env$|credentials|token|secret|password\")",
+      "Bash(grep -v \"\\\\.example$\")"
+    ]
+  }
+}

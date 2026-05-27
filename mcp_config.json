@@ -1,0 +1,93 @@
+{
+  "mcp_servers": {
+    "filesystem": {
+      "name": "filesystem-mcp",
+      "host": "localhost",
+      "port": 8000,
+      "url": "http://localhost:8000",
+      "description": "File system operations for AI Employee",
+      "enabled": true
+    },
+    "email": {
+      "name": "email-mcp",
+      "host": "localhost",
+      "port": 8001,
+      "url": "http://localhost:8001",
+      "description": "Email sending operations via Gmail SMTP",
+      "enabled": true,
+      "config": {
+        "smtp_server": "smtp.gmail.com",
+        "smtp_port": 587,
+        "credentials_env": "GMAIL_ADDRESS,GMAIL_APP_PASSWORD"
+      }
+    },
+    "linkedin": {
+      "name": "linkedin-mcp",
+      "host": "localhost",
+      "port": 8002,
+      "url": "http://localhost:8002",
+      "description": "LinkedIn social media posting",
+      "enabled": true
+    },
+    "approval": {
+      "name": "approval-mcp",
+      "host": "localhost",
+      "port": 8003,
+      "url": "http://localhost:8003",
+      "description": "Human-in-the-loop approval system",
+      "enabled": true
+    },
+    "whatsapp": {
+      "name": "whatsapp-mcp",
+      "host": "localhost",
+      "port": 8004,
+      "url": "http://localhost:8004",
+      "description": "WhatsApp messaging notifications",
+      "enabled": true
+    },
+    "odoo": {
+      "name": "odoo-mcp",
+      "host": "localhost",
+      "port": 8005,
+      "url": "http://localhost:8005",
+      "description": "Odoo ERP accounting operations (Gold Tier)",
+      "enabled": true,
+      "config": {
+        "odoo_url": "http://localhost:8069",
+        "odoo_database": "odoo",
+        "odoo_username": "admin",
+        "credentials_env": "ODOO_PASSWORD"
+      }
+    },
+    "facebook": {
+      "name": "facebook-mcp",
+      "host": "localhost",
+      "port": 8006,
+      "url": "http://localhost:8006",
+      "description": "Facebook/Instagram posting via Graph API",
+      "enabled": true,
+      "config": {
+        "graph_api_version": "v19.0",
+        "credentials_env": "FACEBOOK_APP_ID,FACEBOOK_APP_SECRET"
+      }
+    },
+    "twitter": {
+      "name": "twitter-mcp",
+      "host": "localhost",
+      "port": 8007,
+      "url": "http://localhost:8007",
+      "description": "Twitter (X) posting via API v2",
+      "enabled": true,
+      "config": {
+        "api_version": "v2",
+        "max_tweet_length": 280,
+        "credentials_env": "TWITTER_CLIENT_ID,TWITTER_CLIENT_SECRET"
+      }
+    }
+  },
+  "claude_integration": {
+    "mcp_config_path": "~/.config/claude-code/mcp.json",
+    "auto_start_servers": true,
+    "connection_timeout": 30
+  }
+}

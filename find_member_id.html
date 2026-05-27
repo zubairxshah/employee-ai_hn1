@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Find Your LinkedIn Member ID</title>
+    <style>
+        body { font-family: Arial; max-width: 800px; margin: 50px auto; padding: 20px; }
+        .step { background: #f0f0f0; padding: 15px; margin: 15px 0; border-radius: 5px; }
+        .highlight { background: #ffffcc; padding: 2px 5px; }
+        button { background: #0077b5; color: white; padding: 10px 20px; border: none; cursor: pointer; font-size: 16px; }
+        button:hover { background: #005582; }
+        #result { margin-top: 20px; padding: 15px; border: 2px solid #0077b5; display: none; }
+        code { background: #e0e0e0; padding: 2px 5px; }
+    </style>
+</head>
+<body>
+    <h1>Find Your LinkedIn Member ID</h1>
+    
+    <div class="step">
+        <h2>Step 1: Open your LinkedIn profile</h2>
+        <button onclick="openProfile()">Open LinkedIn Profile</button>
+        <p>Copy your profile URL from the browser address bar.</p>
+        <p>Example: <code>https://www.linkedin.com/in/john-doe-123456789/</code></p>
+        <p>The number at the end (<span class="highlight">123456789</span>) might be your Member ID.</p>
+    </div>
+
+    <div class="step">
+        <h2>Step 2: Use LinkedIn UGC Post Tool</h2>
+        <button onclick="openUGCTool()">Open UGC Post Tool</button>
+        <p>This tool should display your Person URN at the top of the page.</p>
+        <p>Look for text like: <code>urn:li:member:XXXXXXXXX</code> or <code>urn:li:person:XXXXXXXXX</code></p>
+        <p>Copy the <strong>numeric ID only</strong> (the XXXXXXXXX part).</p>
+    </div>
+
+    <div class="step">
+        <h2>Step 3: Enter your Member ID</h2>
+        <input type="text" id="memberId" placeholder="Enter your Member ID (numbers only)" style="padding: 10px; width: 300px; font-size: 16px;">
+        <button onclick="saveMemberId()">Save to .env file</button>
+        <div id="result"></div>
+    </div>
+
+    <div class="step">
+        <h2>Step 4: Test</h2>
+        <p>After saving, restart MCP servers and test posting:</p>
+        <code>python start_mcp_servers.py</code><br>
+        <code>curl -X POST http://localhost:8002/create_post -H "Content-Type: application/json" -d "{\"text\": \"Test post\", \"visibility\": \"PUBLIC\"}"</code>
+    </div>
+
+    <script>
+        function openProfile() {
+            window.open('https://www.linkedin.com/in/me', '_blank');
+        }
+
+        function openUGCTool() {
+            window.open('https://www.linkedin.com/developers/tools/ugc/posts/create', '_blank');
+        }
+
+        function saveMemberId() {
+            const memberId = document.getElementById('memberId').value.trim();
+            const resultDiv = document.getElementById('result');
+            
+            if (!memberId || !/^\d+$/.test(memberId)) {
+                resultDiv.style.display = 'block';
+                resultDiv.innerHTML = '<strong style="color: red;">Please enter a valid numeric Member ID</strong>';
+                return;
+            }
+
+            // Create a download with instructions
+            const instructions = `
+LinkedIn Member ID Configuration
+================================
+
+Your Member ID: ${memberId}
+
+To configure:
+1. Open this file in a text editor:
+   D:\\prompteng\\employee\\.env
+
+2. Find the line that says:
+   LINKEDIN_PERSON_URN=642a7a2
+
+3. Replace it with:
+   LINKEDIN_PERSON_URN=${memberId}
+
+4. Save the file
+
+5. Restart MCP servers:
+   python start_mcp_servers.py
+
+6. Test posting:
+   curl -X POST http://localhost:8002/create_post -H "Content-Type: application/json" -d "{\\\"text\\\": \\\"Test post\\\", \\\"visibility\\\": \\\"PUBLIC\\\"}"
+`;
+            
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML = `
+                <strong style="color: green;">Member ID saved!</strong><br><br>
+                <strong>Next steps:</strong><br>
+                1. Open: <code>D:\\prompteng\\employee\\.env</code><br>
+                2. Change: <code>LINKEDIN_PERSON_URN=642a7a2</code><br>
+                3. To: <code>LINKEDIN_PERSON_URN=${memberId}</code><br>
+                4. Save and restart MCP servers<br><br>
+                <button onclick="copyInstructions()">Copy Instructions</button>
+                <textarea id="instrText" style="display:none;">${instructions}</textarea>
+            `;
+        }
+
+        function copyInstructions() {
+            const text = document.getElementById('instrText').value;
+            navigator.clipboard.writeText(text).then(() => {
+                alert('Instructions copied to clipboard!');
+            });
+        }
+    </script>
+</body>
+</html>

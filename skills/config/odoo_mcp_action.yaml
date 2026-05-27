@@ -1,0 +1,64 @@
+# Odoo MCP Action Skill Configuration
+# Gold Tier Feature - Accounting Operations
+
+skill_name: odoo_mcp_action
+version: 1.0.0
+description: Accounting operations via Odoo ERP MCP server
+category: action
+enabled: true
+
+# MCP Server Configuration
+mcp:
+  url: http://localhost:8005
+  timeout: 60
+  retry_attempts: 3
+  retry_delay: 5
+
+# Odoo Connection Configuration
+odoo:
+  url: http://localhost:8069
+  database: odoo
+  username: admin
+  # Password should be set via environment variable: ODOO_PASSWORD
+  # Use .env file to set: ODOO_PASSWORD=your_password_or_api_key
+
+# Invoice Configuration
+invoice:
+  default_payment_terms: 30  # Days
+  auto_confirm: false  # Require approval before confirming invoices
+  default_narration: "Thank you for your business"
+
+# Payment Configuration
+payment:
+  default_method: manual
+  require_approval_over: 500  # Require approval for payments over $500
+
+# Customer Configuration
+customer:
+  auto_create: true  # Auto-create customers if not found
+  require_vat: false  # VAT number required for B2B
+
+# Product Configuration
+product:
+  default_type: service
+  require_cost: false
+
+# Reporting Configuration
+reporting:
+  default_period_days: 30
+  currency: USD
+
+# Approval Workflow
+approval:
+  required_for:
+    - create_invoice
+    - register_payment
+  thresholds:
+    invoice_amount: 500
+    payment_amount: 500
+
+# Logging Configuration
+logging:
+  level: INFO
+  log_requests: true
+  log_responses: true
