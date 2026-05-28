@@ -327,13 +327,14 @@ ODOO_TOOLS = [
     ),
     types.FunctionDeclaration(
         name="odoo__get_invoices",
-        description="List invoices. Filter by partner, type, state.",
+        description="List invoices. Filter by partner, type, state, or ref. Use the 'ref' filter (exact match on Customer Reference) to look up invoices by their internal identifier like 'INV-002' — Odoo's auto-generated 'name' is a sequence like 'INV/2026/00009', not your internal ID.",
         parameters={
             "type": "object",
             "properties": {
                 "partner_id": {"type": "integer"},
                 "move_type": {"type": "string", "description": "'out_invoice' (customer) or 'in_invoice' (vendor)."},
                 "state": {"type": "string", "description": "'draft' | 'posted' | 'cancel'."},
+                "ref": {"type": "string", "description": "Customer Reference, exact match (e.g. 'INV-002')."},
                 "limit": {"type": "integer"},
             },
         },

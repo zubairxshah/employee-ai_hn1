@@ -421,37 +421,39 @@ def reset_invoice_draft():
 def get_invoices():
     """
     Get invoices with optional filters
-    
+
     Body:
     {
         "partner_id": 123,           # Filter by customer (optional)
         "move_type": "out_invoice",  # Invoice type (optional)
         "state": "posted",           # Status: draft, posted, cancel (optional)
+        "ref": "INV-002",            # Filter by Customer Reference (optional)
         "limit": 50                  # Limit results (optional)
     }
     """
     try:
         data = request.json or {}
         client = get_odoo_client()
-        
-        # Build domain
+
         domain = []
-        
+
         if data.get('partner_id'):
             domain.append(['partner_id', '=', data['partner_id']])
-        
+
         if data.get('move_type'):
             domain.append(['move_type', '=', data['move_type']])
-        
+
         if data.get('state'):
             domain.append(['state', '=', data['state']])
-        
-        # Get invoices
+
+        if data.get('ref'):
+            domain.append(['ref', '=', data['ref']])
+
         invoices = client.search_read(
             'account.move',
             domain=domain,
             fields=[
-                'name', 'partner_id', 'invoice_date', 'invoice_date_due',
+                'name', 'ref', 'partner_id', 'invoice_date', 'invoice_date_due',
                 'amount_total', 'amount_residual', 'payment_state', 'state',
                 'currency_id', 'create_date'
             ],
@@ -512,50 +514,66 @@ def get_invoice():
 @app.route('/register_payment', methods=['POST'])
 def register_payment():
     """
-    Register a payment for an invoice
-    
+    Register a payment for an invoice.
+
     Body:
     {
-        "invoice_id": 123,           # Invoice to pay (required)
-        "amount": 1000.00,           # Payment amount (required)
-        "payment_date": "2026-02-25", # Payment date
-        "payment_method": "manual",  # Payment method
-        "journal_id": 1              # Journal ID (optional)
+        "invoice_id": 123,            # Invoice to pay (required)
+        "amount": 1000.00,            # Payment amount (required)
+        "payment_date": "2026-02-25", # Payment date (optional, defaults to today)
+        "journal_id": 1               # Journal ID (optional, Odoo picks the default bank journal)
     }
+
+    Implementation: uses Odoo's account.payment.register wizard, which requires
+    active_model='account.move' + active_ids=[invoice_id] in the call context.
+    Lets Odoo pick the payment method line automatically based on the journal.
     """
     try:
         data = request.json
         client = get_odoo_client()
-        
+
         if not data.get('invoice_id'):
             return jsonify({'error': 'invoice_id is required'}), 400
-        
+
         if not data.get('amount'):
             return jsonify({'error': 'amount is required'}), 400
-        
-        # Create payment register wizard
+
+        invoice_id = data['invoice_id']
+
         wizard_values = {
             'amount': data['amount'],
             'payment_date': data.get('payment_date', datetime.now().strftime('%Y-%m-%d')),
-            'payment_method_line_id': data.get('payment_method', 'manual')
         }
-        
         if data.get('journal_id'):
             wizard_values['journal_id'] = data['journal_id']
-        
-        # Create payment
-        payment_register_id = client.create('account.payment.register', wizard_values)
-        
-        # Execute payment creation
-        client.execute(
-            'account.payment.register',
-            'action_create_payments',
-            [payment_register_id]
+
+        # The wizard's default-get reads active_model/active_ids from context to
+        # find which invoices are being paid. Without these, the wizard errors
+        # out with cryptic 500s.
+        ctx = {
+            'active_model': 'account.move',
+            'active_ids': [invoice_id],
+            'active_id': invoice_id,
+        }
+
+        wizard_id = client.execute(
+            'account.payment.register', 'create', wizard_values, context=ctx
         )
-        
+        client.execute(
+            'account.payment.register', 'action_create_payments', [wizard_id], context=ctx
+        )
+
+        # Read back the invoice to confirm payment state changed
+        inv = client.search_read(
+            'account.move',
+            [['id', '=', invoice_id]],
+            fields=['name', 'ref', 'amount_total', 'amount_residual', 'payment_state'],
+            limit=1,
+        )
         return jsonify({
             'success': True,
-            'message': f'Payment of {data["amount"]} registered successfully'
+            'message': f'Payment of {data["amount"]} registered against invoice {invoice_id}',
+            'invoice': inv[0] if inv else None,
         })
         
     except Exception as e:
@@ -944,34 +962,31 @@ def get_customer_statements():
 def get_bank_statements():
     """
     Get bank statements
-    
+
     Body:
     {
         "journal_id": 1,             # Bank journal ID (optional)
-        "state": "posted",           # Status: draft, posted (optional)
         "limit": 50                  # Limit results (optional)
     }
+
+    Note: Odoo 17 moved `state` off account.bank.statement onto
+    account.bank.statement.line, so state filtering must be done via
+    /get_bank_statement_lines.
     """
     try:
         data = request.json or {}
         client = get_odoo_client()
-        
-        # Build domain
+
         domain = []
-        
         if data.get('journal_id'):
             domain.append(['journal_id', '=', data['journal_id']])
-        
-        if data.get('state'):
-            domain.append(['state', '=', data['state']])
-        
-        # Get bank statements
+
         statements = client.search_read(
             'account.bank.statement',
             domain=domain,
             fields=[
                 'name', 'journal_id', 'date', 'balance_start', 'balance_end',
-                'balance_end_real', 'state', 'line_ids', 'create_date'
+                'balance_end_real', 'line_ids', 'create_date'
             ],
             limit=data.get('limit', 50)
         )
