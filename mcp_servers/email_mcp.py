@@ -1,12 +1,15 @@
 """
 Email MCP Server
-Provides email sending capabilities via Gmail SMTP
+Provides email sending capabilities via the Gmail API (OAuth2)
+
+Authentication uses the OAuth2 token at .gmail_token.json, created by
+scripts/gmail_auth.py. No SMTP app password is required.
 """
 
 import os
 import sys
-import smtplib
 import base64
+import json
 from pathlib import Path
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
@@ -14,6 +17,12 @@ from email.mime.base import MIMEBase
 from email import encoders
 from flask import Flask, request, jsonify
 from datetime import datetime
+
+from google.oauth2.credentials import Credentials
+from google.auth.transport.requests import Request as GoogleAuthRequest
+from google.auth.exceptions import RefreshError
+from googleapiclient.discovery import build
+from googleapiclient.errors import HttpError
 
 # Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -30,12 +39,24 @@ SECURITY_CONFIG = get_security_config()
 SECURE_EXECUTOR = get_secure_executor()
 
 # Email configuration
-SMTP_SERVER = "smtp.gmail.com"
-SMTP_PORT = 587
+GMAIL_TOKEN_FILE = Path(
+    os.getenv("GMAIL_TOKEN_PATH", str(Path(__file__).parent.parent / '.gmail_token.json'))
+)
+GMAIL_SCOPES = [
+    'https://www.googleapis.com/auth/gmail.readonly',
+    'https://www.googleapis.com/auth/gmail.send',
+    'https://www.googleapis.com/auth/gmail.modify'
+]
+GMAIL_SEND_SCOPE = 'https://www.googleapis.com/auth/gmail.send'
+REAUTH_HINT = "Re-run: python scripts/gmail_auth.py"
+
 EMAIL_CONFIG = {
-    "gmail_address": "",
-    "app_password": ""  # Gmail App Password (not regular password)
+    "gmail_address": ""
 }
+
+# Cached OAuth credentials / API client
+_GMAIL_CREDS = None
+_GMAIL_SERVICE = None
 
 
 def load_email_config():
@@ -54,23 +75,71 @@ def load_email_config():
                     value = value.strip().strip('"').strip("'")
                     if key == 'GMAIL_ADDRESS':
                         EMAIL_CONFIG['gmail_address'] = value
-                    elif key == 'GMAIL_APP_PASSWORD':
-                        EMAIL_CONFIG['gmail_password'] = value
-    
-    # Also check for credentials file
-    creds_file = Path(__file__).parent.parent / 'gmail_credentials.json'
-    if creds_file.exists():
-        try:
-            import json
-            with open(creds_file, 'r') as f:
-                creds = json.load(f)
-                # Extract email from installed config if available
-                if 'installed' in creds and 'client_email' in creds['installed']:
-                    EMAIL_CONFIG['gmail_address'] = creds['installed']['client_email']
-        except Exception:
-            pass
-    
+
     return EMAIL_CONFIG
+
+
+def get_gmail_credentials():
+    """Load OAuth2 credentials, refreshing and persisting them when expired"""
+    global _GMAIL_CREDS
+
+    if _GMAIL_CREDS is None:
+        if not GMAIL_TOKEN_FILE.exists():
+            raise ValueError(
+                f"Gmail OAuth token not found at {GMAIL_TOKEN_FILE}. {REAUTH_HINT}"
+            )
+        try:
+            _GMAIL_CREDS = Credentials.from_authorized_user_file(
+                str(GMAIL_TOKEN_FILE), GMAIL_SCOPES
+            )
+        except (ValueError, json.JSONDecodeError) as e:
+            raise ValueError(f"Gmail OAuth token is unreadable: {e}. {REAUTH_HINT}")
+
+    creds = _GMAIL_CREDS
+
+    if not creds.valid:
+        if not (creds.expired and creds.refresh_token):
+            raise ValueError(f"Gmail OAuth token is invalid. {REAUTH_HINT}")
+        try:
+            creds.refresh(GoogleAuthRequest())
+        except RefreshError as e:
+            _GMAIL_CREDS = None
+            raise ValueError(f"Gmail OAuth refresh failed: {e}. {REAUTH_HINT}")
+        try:
+            GMAIL_TOKEN_FILE.write_text(creds.to_json())
+        except OSError as e:
+            # A refreshed token we cannot persist still works for this process
+            SECURITY_CONFIG.logger.warning(f"Could not persist refreshed Gmail token: {e}")
+
+    if not creds.has_scopes([GMAIL_SEND_SCOPE]):
+        raise ValueError(
+            f"Gmail OAuth token is missing the {GMAIL_SEND_SCOPE} scope. {REAUTH_HINT}"
+        )
+
+    return creds
+
+
+def get_gmail_service():
+    """Return a cached Gmail API client backed by current credentials"""
+    global _GMAIL_SERVICE
+
+    creds = get_gmail_credentials()
+    if _GMAIL_SERVICE is None:
+        _GMAIL_SERVICE = build('gmail', 'v1', credentials=creds, cache_discovery=False)
+    return _GMAIL_SERVICE
+
+
+def get_sender_address():
+    """Resolve the From address: GMAIL_ADDRESS if set, else the authenticated account"""
+    config = load_email_config()
+    from_email = config.get('gmail_address', '')
+    if from_email:
+        return from_email
+
+    profile = get_gmail_service().users().getProfile(userId='me').execute()
+    from_email = profile.get('emailAddress', '')
+    EMAIL_CONFIG['gmail_address'] = from_email
+    return from_email
 
 
 def create_email_message(subject, body, to_email, from_email, html=False, attachments=None):
@@ -106,37 +175,31 @@ def create_email_message(subject, body, to_email, from_email, html=False, attach
     return msg
 
 
-def send_email_smtp(to_email, subject, body, html=False, attachments=None):
-    """Send email via Gmail SMTP"""
-    config = load_email_config()
-    
-    from_email = config.get('gmail_address', '')
-    password = config.get('gmail_password', '')
-    
-    if not from_email or not password:
-        raise ValueError("Email credentials not configured. Set GMAIL_ADDRESS and GMAIL_APP_PASSWORD in .env")
-    
-    # Create message
+def send_email_gmail_api(to_email, subject, body, html=False, attachments=None):
+    """Send email via the Gmail API using OAuth2 credentials"""
+    service = get_gmail_service()
+    from_email = get_sender_address()
+
+    # Create the message and hand it to Gmail as a raw RFC 2822 payload
     msg = create_email_message(subject, body, to_email, from_email, html, attachments)
-    
-    # Send via SMTP
+    raw = base64.urlsafe_b64encode(msg.as_bytes()).decode('utf-8')
+
     try:
-        server = smtplib.SMTP(SMTP_SERVER, SMTP_PORT)
-        server.starttls()
-        server.login(from_email, password)
-        server.send_message(msg)
-        server.quit()
-        
-        return {
-            "success": True,
-            "message": f"Email sent to {to_email}",
-            "to": to_email,
-            "subject": subject
-        }
-    except smtplib.SMTPAuthenticationError:
-        raise ValueError("SMTP authentication failed. Check Gmail App Password.")
-    except smtplib.SMTPException as e:
-        raise ValueError(f"SMTP error: {str(e)}")
+        sent = service.users().messages().send(
+            userId='me',
+            body={'raw': raw}
+        ).execute()
+    except HttpError as e:
+        raise ValueError(f"Gmail API error: {e}")
+
+    return {
+        "success": True,
+        "message": f"Email sent to {to_email}",
+        "to": to_email,
+        "subject": subject,
+        "message_id": sent.get('id'),
+        "thread_id": sent.get('threadId')
+    }
 
 
 @app.route('/capabilities', methods=['GET'])
@@ -150,7 +213,7 @@ def get_capabilities():
         "operations": [
             {
                 "name": "send_email",
-                "description": "Send an email via Gmail SMTP",
+                "description": "Send an email via the Gmail API",
                 "parameters": {
                     "to": {"type": "string", "description": "Recipient email address"},
                     "subject": {"type": "string", "description": "Email subject"},
@@ -170,7 +233,7 @@ def get_capabilities():
                 }
             }
         ],
-        "configured": bool(config.get('gmail_address') and config.get('gmail_password'))
+        "configured": GMAIL_TOKEN_FILE.exists()
     }
     return jsonify(capabilities)
 
@@ -222,7 +285,7 @@ def send_email():
         sanitized_body = SECURITY_CONFIG.sanitize_input(body)
         
         # Send email
-        result = send_email_smtp(
+        result = send_email_gmail_api(
             to_email=sanitized_to,
             subject=sanitized_subject,
             body=sanitized_body,
@@ -404,7 +467,7 @@ def execute_approved_draft():
             }), 400
         
         # Send the email
-        result = send_email_smtp(to_email, subject, body)
+        result = send_email_gmail_api(to_email, subject, body)
         
         # Move to Done folder
         done_dir = Path(VAULT_PATH) / "Done" / "Email_Drafts"

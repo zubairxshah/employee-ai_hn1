@@ -16,7 +16,24 @@
       "PowerShell(docker exec odoo-postgres *)",
       "Bash(git add *)",
       "Bash(grep -iE \"\\\\.env$|credentials|token|secret|password\")",
-      "Bash(grep -v \"\\\\.example$\")"
+      "Bash(grep -v \"\\\\.example$\")",
+      "Bash(git commit *)",
+      "Bash(git ls-tree *)",
+      "Bash(git push *)",
+      "Bash(gh api *)",
+      "Bash(gh repo *)",
+      "Bash(python -c \"import anthropic; print\\('anthropic version:', anthropic.__version__\\)\")",
+      "Bash(python -c \"from google import genai; print\\('google-genai version:', genai.__version__\\)\")",
+      "Bash(python -c \"import google.generativeai as gg; print\\('google-generativeai version:', gg.__version__\\)\")",
+      "Bash(pip install *)",
+      "Bash(python run_brain_local.py --task \"D:/prompteng/AI_Employee_Vault/Needs_Action/accounting/multi_mcp_smoke.md\")",
+      "Bash(python *)",
+      "Bash(LLM_BRAIN_MODEL=gemini-2.5-flash-lite python run_brain_local.py --once)",
+      "PowerShell($env:LLM_BRAIN_MODEL='gemini-2.0-flash'; python run_brain_local.py --task \"D:\\\\prompteng\\\\AI_Employee_Vault\\\\Needs_Action\\\\email\\\\queue_test_1_low.md\" 2>&1 | Select-Object -Last 20)",
+      "Bash(LLM_BRAIN_PROVIDER=openrouter python run_brain_local.py --task \"D:/prompteng/AI_Employee_Vault/Needs_Action/email/queue_test_1_low.md\")",
+      "Bash(LLM_BRAIN_PROVIDER=openrouter LLM_BRAIN_OPENROUTER_MODEL='openai/gpt-oss-120b:free' python run_brain_local.py --task \"D:/prompteng/AI_Employee_Vault/Needs_Action/email/queue_test_1_low.md\")",
+      "Bash(LLM_BRAIN_PROVIDER=openrouter LLM_BRAIN_OPENROUTER_MODEL='openai/gpt-oss-120b:free' python run_brain_cloud.py --task \"D:/prompteng/AI_Employee_Vault/Needs_Action/email/cloud_role_test.md\")",
+      "Bash(git checkout *)"
     ]
   }
 }

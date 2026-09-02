@@ -286,41 +286,17 @@ def post_to_linkedin(message, visibility="PUBLIC"):
 
 def send_email_report(recipient, subject, body):
     """
-    Example: Send an email report
+    Example: Send an email report via the Gmail API (OAuth2)
     """
-    import smtplib
-    from email.mime.text import MIMEText
-    from email.mime.multipart import MIMEMultipart
-    
+    # Imported lazily so scheduler startup does not depend on the email MCP
+    from mcp_servers.email_mcp import send_email_gmail_api
+
     try:
-        # Load credentials
-        env_file = PROJECT_ROOT / '.env'
-        gmail_address = ""
-        gmail_password = ""
-        
-        with open(env_file, 'r') as f:
-            for line in f:
-                if 'GMAIL_ADDRESS' in line:
-                    gmail_address = line.split('=')[1].strip().strip('"')
-                elif 'GMAIL_APP_PASSWORD' in line:
-                    gmail_password = line.split('=')[1].strip().strip('"')
-        
-        # Create message
-        msg = MIMEMultipart()
-        msg['From'] = gmail_address
-        msg['To'] = recipient
-        msg['Subject'] = subject
-        msg.attach(MIMEText(body, 'plain'))
-        
-        # Send
-        server = smtplib.SMTP('smtp.gmail.com', 587)
-        server.starttls()
-        server.login(gmail_address, gmail_password)
-        server.send_message(msg)
-        server.quit()
-        
-        return {"success": True, "message": "Email sent successfully"}
-        
+        return send_email_gmail_api(
+            to_email=recipient,
+            subject=subject,
+            body=body
+        )
     except Exception as e:
         return {"success": False, "error": str(e)}
 

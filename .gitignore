@@ -9,6 +9,11 @@ deploy/cloud.env
 .twitter_token.json
 *.token.json
 
+# Backups of credential files (e.g. .facebook_token.json.bak)
+*.bak
+*.bak[0-9]*
+*.backup
+
 # OAuth client credentials
 gmail_credentials.json
 *_credentials.json
