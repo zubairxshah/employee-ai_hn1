@@ -27,14 +27,18 @@ class WindowsTaskScheduler:
         self.username = getpass.getuser()
         self.tasks = []
     
-    def create_task(self, task_name, script_path, trigger_type, **trigger_args):
+    def create_task(self, task_name, script_path, trigger_type,
+                    run_level="HIGHEST", **trigger_args):
         """
         Create a scheduled task in Windows Task Scheduler
-        
+
         Args:
             task_name: Name for the task
             script_path: Path to Python script to run
             trigger_type: 'daily', 'weekly', 'hourly', 'at_startup', 'on_idle'
+            run_level: 'HIGHEST' (needs an elevated shell to register) or
+                'LIMITED'. Use LIMITED for anything that does not require
+                admin rights, so setup works from a normal terminal.
             trigger_args: Trigger-specific arguments
                 - For daily: hour=9, minute=0
                 - For weekly: day_of_week='MON', hour=10, minute=0
@@ -47,7 +51,7 @@ class WindowsTaskScheduler:
             "schtasks", "/Create",
             "/TN", full_task_name,
             "/TR", f'"{PYTHON_EXE}" "{script_path}"',
-            "/RL", "HIGHEST",
+            "/RL", run_level,
             "/F"  # Force create (overwrite if exists)
         ]
         
@@ -58,20 +62,16 @@ class WindowsTaskScheduler:
             cmd.extend(["/SC", "DAILY", "/ST", f"{hour:02d}:{minute:02d}"])
         
         elif trigger_type == "weekly":
-            day_map = {
-                'MON': 'MONDAY',
-                'TUE': 'TUESDAY',
-                'WED': 'WEDNESDAY',
-                'THU': 'THURSDAY',
-                'FRI': 'FRIDAY',
-                'SAT': 'SATURDAY',
-                'SUN': 'SUNDAY'
-            }
-            day = trigger_args.get('day_of_week', 'MON')
-            day_full = day_map.get(day.upper(), 'MONDAY')
+            # schtasks /D takes the three-letter day (MON), not the full name -
+            # passing MONDAY fails with "Invalid value for /D option". Accept
+            # either spelling from callers and truncate.
+            valid_days = ('MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN')
+            day = trigger_args.get('day_of_week', 'MON').upper()[:3]
+            if day not in valid_days:
+                day = 'MON'
             hour = trigger_args.get('hour', 9)
             minute = trigger_args.get('minute', 0)
-            cmd.extend(["/SC", "WEEKLY", "/D", day_full, "/ST", f"{hour:02d}:{minute:02d}"])
+            cmd.extend(["/SC", "WEEKLY", "/D", day, "/ST", f"{hour:02d}:{minute:02d}"])
         
         elif trigger_type == "hourly":
             interval = trigger_args.get('interval', 1)
