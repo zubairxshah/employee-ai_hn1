@@ -2,12 +2,12 @@
 import sys
 sys.path.insert(0, '.')
 
-from mcp_servers.email_mcp import send_email_smtp
+from mcp_servers.email_mcp import send_email_gmail_api
 
 print("Testing email send...")
 
 try:
-    result = send_email_smtp(
+    result = send_email_gmail_api(
         to_email='emaxis.newsletter@gmail.com',
         subject='AI Employee Test Email',
         body='''Hello,
